@@ -42,7 +42,7 @@ A modular pipeline designed around five core phases:
 
 ## Technical Highlights
 ### Data Quality Engineering
-# Fuzzy matching implementation for region correction
+##### Fuzzy matching implementation for region correction
 def _correct_region(self, region_name, valid_regions, threshold=80):
     match, score, _ = process.extractOne(region_name, valid_regions, scorer=fuzz.token_set_ratio)
     return match if score >= threshold else "Unknown"
