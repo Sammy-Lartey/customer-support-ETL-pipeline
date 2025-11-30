@@ -104,16 +104,9 @@ Python (Pandas, SQLAlchemy, RapidFuzz), PostgreSQL, ULID, python-dotenv
 - Unified historical customer support view
 
 ## Why This Project Matters
-This pipeline was not just ETL—it was a complete data quality and integration solution. It addressed:
-- Real-life inconsistencies
-- Multi-source data alignment
-- Ghana-specific phone and region formats
-- Business rule automation
-
-## What It Demonstrates About Me
-- Ability to architect complete data solutions
-- Strong data quality engineering mindset
-- Practical understanding of real-world messy data
-- Clean, maintainable, production-ready code
-- Balance of performance, structure, and business needs
+A robust data engineering solution that transforms messy, fragmented data into reliable, actionable intelligence. Highlights:
+- Resolves real-world inconsistencies in customer support data
+- Unifies multi-source datasets for seamless analytics
+- Applies localized rules for Ghanaian phone and region formats
+- Automates business logic to maintain data accuracy and integrity.
 
