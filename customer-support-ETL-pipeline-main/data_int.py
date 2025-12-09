@@ -1,4 +1,3 @@
-# data_int.py - FIXED (simplified version)
 from sqlalchemy import text
 import ulid
 from libs import pd
