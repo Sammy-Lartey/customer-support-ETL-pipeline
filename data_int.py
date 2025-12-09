@@ -5,18 +5,19 @@ import numpy as np
 
 class DataIntegrator:
 
-    def __init__(self, engine, schema_name: str):
+    def __init__(self, engine, schema_name: str, logger):
         self.engine = engine
         self.schema_name = schema_name
+        self.logger = logger
+        self.logger.info("DataIntegrator initialized with engine and schema.")
 
     def assign_customer_ids(self):
         with self.engine.begin() as conn:
             customers_df = pd.read_sql(f"SELECT * FROM {self.schema_name}.customers", conn)
             complaints_df = pd.read_sql(f"SELECT * FROM {self.schema_name}.complaints", conn)
 
-        print(f"DEBUG: Starting with {len(customers_df)} customers, {len(complaints_df)} complaints")
-        print(f"DEBUG: Customers profileId stats - Not null: {customers_df['profileId'].notna().sum()}, Null: {customers_df['profileId'].isna().sum()}")
-        print(f"DEBUG: First few profileIds: {customers_df['profileId'].head(10).tolist()}")
+        self.logger.info(f"Starting with {len(customers_df)} customers, {len(complaints_df)} complaints")
+        self.logger.info(f"Customers profileId stats - Not null: {customers_df['profileId'].notna().sum()}, Null: {customers_df['profileId'].isna().sum()}")
     
         # Build profileId->ULID mapping
         profile_to_ulid = {}
@@ -25,26 +26,27 @@ class DataIntegrator:
             if pd.notna(pid) and pid not in profile_to_ulid:
                 profile_to_ulid[pid] = str(ulid.new())
         
-        #  Map phone numbers for rows without profileId
+        # Map phone numbers for rows without profileId
         for idx, row in customers_df.iterrows():
             if pd.isna(row['profileId']) and pd.notna(row['number']):
                 phone_key = f"number:{row['number']}"
                 if phone_key not in profile_to_ulid:
                     profile_to_ulid[phone_key] = str(ulid.new())
 
-        #  Resolve customerId function
+        # Resolve customerId function - FIXED QUOTE ISSUE
         def resolve_customer_id(row):
             if pd.notna(row['profileId']) and row['profileId'] in profile_to_ulid:
                 return profile_to_ulid[row['profileId']]
             elif pd.notna(row['number']):
-                return profile_to_ulid.get(f"number:{row['number']}")
+                phone_key = f"number:{row['number']}"  # Store in variable
+                return profile_to_ulid.get(phone_key)  # Use variable
             return None
 
-        #  Assign customerIds
+        # Assign customerIds
         customers_df['customerId'] = customers_df.apply(resolve_customer_id, axis=1)
         complaints_df['customerId'] = complaints_df.apply(resolve_customer_id, axis=1)
 
-        #  Remove rows with no identifiers
+        # Remove rows with no identifiers
         no_identifiers = customers_df[
             customers_df['customerId'].isna() &
             customers_df['profileId'].isna() &
@@ -57,10 +59,10 @@ class DataIntegrator:
                 customers_df['number'].notna()
             ]
 
-        #  Drop duplicate customerIds
+        # Drop duplicate customerIds
         customers_df = customers_df.drop_duplicates(subset=['customerId'])
 
-        #  Filter complaints to only include valid customerIds
+        # Filter complaints to only include valid customerIds
         complaints_df = complaints_df[complaints_df['customerId'].isin(customers_df['customerId'])]
 
         # Write back to DB
@@ -68,8 +70,7 @@ class DataIntegrator:
             customers_df.to_sql("customers", conn, schema=self.schema_name, if_exists="replace", index=False)
             complaints_df.to_sql("complaints", conn, schema=self.schema_name, if_exists="replace", index=False)
 
-        print(f"Customer IDs assigned: {len(customers_df)} customers, {len(complaints_df)} complaints")
-        print("Customer IDs propagated to complaints and data written back to the database successfully!")
+        self.logger.info(f"Customer IDs assigned: {len(customers_df)} customers, {len(complaints_df)} complaints")
 
     def reorder_table_columns(self):
         
@@ -98,11 +99,11 @@ class DataIntegrator:
             complaints_df = complaints_df[complaint_final_order]
             complaints_df.to_sql("complaints", conn, schema=self.schema_name, if_exists="replace", index=False)
 
-        print("Final column ordering completed!")
+        self.logger.info("Final column ordering completed!")
 
     def apply_constraints(self):
         
-        print("Adding database constraints...")
+        self.logger.info("Adding database constraints...")
         with self.engine.begin() as conn:
             # Clean up NULL values
             conn.execute(text(f"""
@@ -166,14 +167,12 @@ class DataIntegrator:
                 ALTER COLUMN "logDate" SET NOT NULL;
             """))
 
-        print("Database constraints applied successfully!")
-
+        self.logger.info("Database constraints applied successfully!")
 
     def run_full_integration(self):
         
-        print("Starting data integration pipeline...")
+        self.logger.info("Starting data integration pipeline...")
         self.assign_customer_ids()
         self.reorder_table_columns()
         self.apply_constraints()
-        
-        print("Data integration pipeline completed successfully!")
+        self.logger.info("Data integration pipeline completed successfully!")

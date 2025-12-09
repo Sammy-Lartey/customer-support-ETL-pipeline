@@ -1,9 +1,13 @@
 from libs import *
+from logger import get_logger, log_step_start, log_step_complete, log_df_info, log_db_ops, log_error, log_warning, log_debug_info
+
+logger = get_logger()
 
 class DataCleaner:
 
-    def __init__(self, df: pd.DataFrame):
+    def __init__(self, df: pd.DataFrame, logger):
         self.df = df.copy()
+        self.logger = logger
 
     # Private Helper Methods(Helper Functions)
 
@@ -11,7 +15,9 @@ class DataCleaner:
     def _clean_name(self, name):
         if pd.isna(name) or name.strip().lower() in ['nan', 'none', 'null', '']:
             return "Unknown"
-        return str(name).strip()
+        cleaned =  str(name).strip()
+        self.logger.debug(f"Cleaned name: {cleaned}")
+        return cleaned
     
     # lower camel case
     def _to_lower_camel(self, s: str):
@@ -54,8 +60,10 @@ class DataCleaner:
 
     # Main Cleaning Logic
     def clean_columns(self):
+        self.logger.info("Starting column cleaning process")
 
         df = self.df.copy()
+        log_df_info("Original DataFrame", df)
 
         valid_regions = [
             "Ashanti Region", "Greater Accra Region", "Northern Region", "Volta Region",
@@ -66,11 +74,16 @@ class DataCleaner:
 
         # clean name column
         if 'name' in df.columns:
+            self.logger.info("Cleaning name column")
             df['name'] = df['name'].apply(self._clean_name)
+            self.logger.info("Name column cleaning completed")
 
         # normalize column names
+        self.logger.info("Normalizing column names")
+        original_columns = df.columns.tolist()
         df.columns = [self._to_lower_camel(col) for col in df.columns]
         df.columns = df.columns.str.replace(' ', '', regex=False)
+        self.logger.debug(f"Normalized column names: {df.columns.tolist()}")
 
         # rename key columns
         rename_dict = {}
@@ -78,7 +91,9 @@ class DataCleaner:
             rename_dict['tat'] = 'turnaroundTime'
         if 'dob' in df.columns:
             rename_dict['dob'] = 'dateOfBirth'
-        df = df.rename(columns=rename_dict)
+        if rename_dict:
+            self.logger.info(f"Renaming columns: {rename_dict}")
+            df = df.rename(columns=rename_dict)
 
         # convert types
         for col in ['turnaroundTime', 'dateOfBirth']:
@@ -111,7 +126,8 @@ class DataCleaner:
 
         
         df = df.drop_duplicates()
-        print(f"Cleaned data: {df.shape[0]} rows, {df.shape[1]} columns")
+        self.logger.info(f"Cleaned data {df.shape[0] - df.drop_duplicates().shape[0]} duplicate rows")
+        log_df_info("Cleaned DataFrame", df)
 
         self.df = df
         return df
@@ -119,12 +135,16 @@ class DataCleaner:
 
     # TAT Validation
     def validate_and_calculate_tat(self):
+        self.logger.info("Validating and calculating TAT")
 
         df = self.df.copy()
 
         needed = ['logDate', 'resolutionDate', 'turnaroundTime']
         if not all(col in df.columns for col in needed):
-            raise ValueError(f"DataFrame must contain columns: {needed}")
+            error_msg = f"DataFrame must contain columns: {needed}"
+
+            self.logger.error(error_msg)
+            raise ValueError(error_msg)
         
         df['logDate'] = pd.to_datetime(df['logDate'], errors='coerce')
         df['resolutionDate'] = pd.to_datetime(df['resolutionDate'], errors='coerce')
@@ -161,7 +181,7 @@ class DataCleaner:
         negative = (df['turnaroundTime']<0).sum()
         missing = df['turnaroundTime'].isna().sum()
         valid = df['turnaroundTime'].notna().sum()
-        print(f"Valid TATs: {valid} (negative: {negative}, swapped: {swapped.sum()}, missing: {missing})")
+        self.logger.info(f"Valid TATs: {valid} (negative: {negative}, swapped: {swapped.sum()}, missing: {missing})")
 
         self.df = df
         return df

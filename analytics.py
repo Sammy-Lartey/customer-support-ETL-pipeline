@@ -2,12 +2,14 @@ from libs import *
 
 class Analytics:
 
-    def __init__(self, engine, schema_name):
+    def __init__(self, engine, schema_name, logger):
         self.engine = engine
         self.schema_name = schema_name
+        self.logger = logger    
 
 
     def create_indexes(self):
+        self.logger.info("Creating indexes...")
         indexes = [
             ('customers', 'number'),
             ('customers', 'profileId'),
@@ -25,11 +27,12 @@ class Analytics:
                         CREATE INDEX IF NOT EXISTS idx_{table}_{column}
                         ON {self.schema_name}.{table} ("{column}");
                     """))
-                    print(f"Created index on {table}.{column}")
+                    self.logger.info(f"Created index on {table}.{column}")
                 except Exception as e:
-                    print(f"Error creating index on {table}.{column}: {e}")
+                    self.logger.error(f"Error creating index on {table}.{column}: {e}")
     
     def create_views(self):
+        self.logger.info("Creating views...")
         schema = self.schema_name
         views = {
             'vw_customer_overview': f"""
@@ -107,19 +110,21 @@ class Analytics:
                 ORDER BY DATE_TRUNC('month', co."logDate") DESC;
             """
         }
+        self.logger.info("Views created successfully.")
         
         with self.engine.begin() as conn:
             for name, sql in views.items():
                 try:
                     conn.execute(text(sql))
-                    print(f"Created view: {name}")
+                    self.logger.info(f"Created view: {name}")
                 except Exception as e:
-                    print(f"Error creating view {name}: {str(e)}")
+                    self.logger.error(f"Error creating view {name}: {str(e)}")
        
-        print("All views created successfully.")
+        self.logger.info("All views created successfully.")
 
     
     def create_materialized_views(self):
+        self.logger.info("Creating materialized views...")
         schema = self.schema_name
         mats = {
             'mv_monthly_complaint_summary': f"""
@@ -136,5 +141,10 @@ class Analytics:
         }
         with self.engine.begin() as conn:
             for name, sql in mats.items():
-                conn.execute(text(sql))
-        print("Materialized views created successfully.")
+                try:
+                    conn.execute(text(sql))
+                    self.logger.info(f"Created materialized view: {name}")
+                except Exception as e:
+                    self.logger.error(f"Error creating materialized view {name}: {str(e)}")
+        
+        self.logger.info("Materialized views created successfully.")

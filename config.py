@@ -20,7 +20,10 @@ CONFIG = {
         "DB_PORT": os.getenv("DB_PORT"),
     },
 
+    # Logging configuration
     "logging_level": os.getenv("LOG_LEVEL"),
+    "log_file_max_size": int(os.getenv("LOG_FILE_MAX_SIZE", 10)),
+    "log_backup_count": int(os.getenv("LOG_BACKUP_COUNT", 5)),
     "exclude_sheets": os.getenv("CS2025_EXCLUDE_SHEETS").split(","),
 }
 
