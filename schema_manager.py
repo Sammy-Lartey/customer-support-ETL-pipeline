@@ -2,6 +2,8 @@ from libs import *
 from logger import get_logger, log_step_start, log_step_complete, log_df_info, log_db_ops, log_error, log_warning, log_debug_info
 
 class SchemaManager:
+
+    # Initialize the SchemaManager class
     def __init__(self, engine, schema_name, logger):
         self.engine = engine
         self.schema_name = schema_name
@@ -64,7 +66,7 @@ class SchemaManager:
             """))
         self.logger.info("Number2 sync complete")
 
-   
+    # Set up the schema for the DataFrame
     def setup_schema(self, df: pd.DataFrame, split_func=None):
         self.logger.info("Setting up schema for DataFrame")
         split_func = split_func or self.split_data

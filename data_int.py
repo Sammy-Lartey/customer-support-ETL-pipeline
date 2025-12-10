@@ -5,12 +5,14 @@ import numpy as np
 
 class DataIntegrator:
 
+    # Initialize the DataIntegrator class
     def __init__(self, engine, schema_name: str, logger):
         self.engine = engine
         self.schema_name = schema_name
         self.logger = logger
         self.logger.info("DataIntegrator initialized with engine and schema.")
 
+    # Assign customerIds to complaints
     def assign_customer_ids(self):
         with self.engine.begin() as conn:
             customers_df = pd.read_sql(f"SELECT * FROM {self.schema_name}.customers", conn)
@@ -72,6 +74,7 @@ class DataIntegrator:
 
         self.logger.info(f"Customer IDs assigned: {len(customers_df)} customers, {len(complaints_df)} complaints")
 
+    # Reorder table columns
     def reorder_table_columns(self):
         
         with self.engine.begin() as conn:
@@ -101,6 +104,7 @@ class DataIntegrator:
 
         self.logger.info("Final column ordering completed!")
 
+    # Apply database constraints
     def apply_constraints(self):
         
         self.logger.info("Adding database constraints...")
@@ -169,6 +173,7 @@ class DataIntegrator:
 
         self.logger.info("Database constraints applied successfully!")
 
+    # Run the full data integration pipeline
     def run_full_integration(self):
         
         self.logger.info("Starting data integration pipeline...")
