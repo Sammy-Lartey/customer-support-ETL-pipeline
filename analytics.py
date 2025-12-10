@@ -2,12 +2,13 @@ from libs import *
 
 class Analytics:
 
+    # Initialize the Analytics class
     def __init__(self, engine, schema_name, logger):
         self.engine = engine
         self.schema_name = schema_name
         self.logger = logger    
 
-
+    # Create indexes for the tables
     def create_indexes(self):
         self.logger.info("Creating indexes...")
         indexes = [
@@ -31,6 +32,7 @@ class Analytics:
                 except Exception as e:
                     self.logger.error(f"Error creating index on {table}.{column}: {e}")
     
+    # Create views for the tables
     def create_views(self):
         self.logger.info("Creating views...")
         schema = self.schema_name
@@ -122,7 +124,7 @@ class Analytics:
        
         self.logger.info("All views created successfully.")
 
-    
+    # Create materialized views for the tables
     def create_materialized_views(self):
         self.logger.info("Creating materialized views...")
         schema = self.schema_name

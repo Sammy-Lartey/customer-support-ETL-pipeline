@@ -43,7 +43,7 @@ class CustomerSupportDataPrep:
         log_step_start("Merging sheets")
 
         if not hasattr(self, 'dataframes') or not self.dataframes:
-            error_msg = "No data loaded! Call load_excel_data() first."
+            error_msg = "No data loaded!"
             self.logger.error(error_msg)
             raise ValueError(error_msg)
         
