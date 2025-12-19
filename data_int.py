@@ -35,13 +35,13 @@ class DataIntegrator:
                 if phone_key not in profile_to_ulid:
                     profile_to_ulid[phone_key] = str(ulid.new())
 
-        # Resolve customerId function - FIXED QUOTE ISSUE
+        # Resolve customerId function
         def resolve_customer_id(row):
             if pd.notna(row['profileId']) and row['profileId'] in profile_to_ulid:
                 return profile_to_ulid[row['profileId']]
             elif pd.notna(row['number']):
-                phone_key = f"number:{row['number']}"  # Store in variable
-                return profile_to_ulid.get(phone_key)  # Use variable
+                phone_key = f"number:{row['number']}"  
+                return profile_to_ulid.get(phone_key)
             return None
 
         # Assign customerIds
