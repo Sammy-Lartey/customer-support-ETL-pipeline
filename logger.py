@@ -7,17 +7,15 @@ from config import CONFIG
 
 
 class ETLPLogger:
-    # Singleton pattern to ensure only one logger instance
+
     _instance = None
 
-    # Create a new instance of the logger if it doesn't exist
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(ETLPLogger, cls).__new__(cls)
             cls._instance._initialized = False
         return cls._instance
 
-    # Initialize logger
     def __init__(self):
         if self._initialized:
             return
@@ -33,7 +31,7 @@ class ETLPLogger:
         log_file = os.path.join(logs_dir, f"etlp_pipeline_{timestamp}.log")
 
         # get log level from config
-        log_level_str = CONFIG.get('Logging_level', 'INFO').upper()
+        log_level_str = CONFIG.get('logging_level', 'INFO').upper()
         log_level = getattr(logging, log_level_str, logging.INFO)
 
         # create logger
@@ -111,34 +109,27 @@ class ETLPLogger:
             self.logger.debug(f"Data: {data}")
 
 # Convenience Functions
-# Get the logger instance
+
 def get_logger():
     return ETLPLogger.get_logger()
 
-# Log the start of a pipeline step
 def log_step_start(step_name, **kwargs):
     ETLPLogger().log_step_start(step_name, **kwargs)
 
-# Log the completion of a pipeline step
 def log_step_complete(step_name, duration = None):
     ETLPLogger().log_step_complete(step_name, duration)
 
-# Log DataFrame information
 def log_df_info(df_name, df):
     ETLPLogger().log_df_info(df_name, df)
 
-# Log database operations
 def log_db_ops(ops, table, rows_affected = None):
     ETLPLogger().log_db_ops(ops, table, rows_affected)
 
-# Log errors
 def log_error(error_msg, exc_info = True):
     ETLPLogger().log_error(error_msg, exc_info)
 
-# Log warnings
 def log_warning(warning_msg, data = None):
     ETLPLogger().log_warning(warning_msg, data)
 
-# Log debug information
 def log_debug_info(debug_msg, data = None):
     ETLPLogger().log_debug_info(debug_msg, data)
