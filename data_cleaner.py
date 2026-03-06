@@ -1,5 +1,5 @@
 from libs import *
-from logger import get_logger, log_df_info
+from logger import get_logger, log_step_start, log_step_complete, log_df_info, log_db_ops, log_error, log_warning, log_debug_info
 
 logger = get_logger()
 
@@ -125,8 +125,9 @@ class DataCleaner:
                 df[col] = pd.to_datetime(df[col], errors='coerce').dt.date
 
         
+        duplicate_count = df.duplicated().sum()
         df = df.drop_duplicates()
-        self.logger.info(f"Cleaned data {df.shape[0] - df.drop_duplicates().shape[0]} duplicate rows")
+        self.logger.info(f"Removed {duplicate_count} duplicate rows")
         log_df_info("Cleaned DataFrame", df)
 
         self.df = df
@@ -185,5 +186,3 @@ class DataCleaner:
 
         self.df = df
         return df
-
-        
